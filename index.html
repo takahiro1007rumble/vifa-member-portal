@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f3">
+  <title>会員ページ | vifa</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+    :root{--ink:#24313c;--muted:#66747c;--blue:#36a9c5;--blue-dark:#1687a3;--coral:#df795e;--lime:#d9e784;--paper:#fbfcf9;--line:#dce3df;--soft:#eef3f1;--shadow:0 12px 30px rgba(37,54,62,.08)}
+    *{box-sizing:border-box}
+    body{margin:0;background:#f4f6f3;color:var(--ink);font-family:'Noto Sans JP','DM Sans',sans-serif;font-size:15px;line-height:1.75}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    [hidden]{display:none!important}
+    .auth-screen{min-height:100vh;display:grid;place-items:center;padding:24px}
+    .auth-panel{width:min(100%,440px);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:32px;box-shadow:var(--shadow)}
+    .auth-brand{font:700 34px 'DM Sans',sans-serif;color:var(--blue);line-height:1}
+    .auth-panel h1{font-size:23px;margin:22px 0 6px}
+    .auth-panel p{font-size:13px;color:var(--muted);margin:0 0 20px}
+    .auth-form{display:grid;gap:14px}
+    .auth-form label{font-size:12px;font-weight:600;display:grid;gap:6px}
+    .auth-status{font-size:12px;color:var(--blue-dark);margin:14px 0 0!important;min-height:1.75em}
+    .auth-actions{display:grid;gap:8px;margin-top:12px}
+    .auth-actions button{border:1px solid var(--line);border-radius:4px;background:white;color:var(--ink);padding:10px;font-size:12px}
+    .auth-actions button:hover{border-color:var(--blue)}
+    .shell{min-height:100vh;display:grid;grid-template-columns:258px minmax(0,1fr)}
+    aside{background:#263641;color:#f8fbf8;padding:26px 18px;display:flex;flex-direction:column;gap:26px;min-height:100vh;position:sticky;top:0;height:100vh}
+    .brand{display:flex;align-items:center;gap:12px;padding:4px 12px 18px;border-bottom:1px solid rgba(255,255,255,.15)}
+    .brand-mark{font-family:'DM Sans',sans-serif;font-size:37px;line-height:1;font-weight:700;letter-spacing:0;color:#56c2d5}
+    .brand-copy{font-size:10px;line-height:1.45;color:#d9e7e7;letter-spacing:0}
+    .nav-label{font-size:10px;color:#91a1a5;letter-spacing:.12em;padding:0 12px;text-transform:uppercase}
+    .lesson-nav{display:grid;gap:6px}
+    .nav-item{border:0;background:transparent;color:#d8e2e0;text-align:left;border-radius:6px;padding:10px 12px;display:flex;align-items:center;gap:12px;transition:background .18s,color .18s}
+    .nav-item:hover,.nav-item.active{background:#344a54;color:white}
+    .nav-number{width:26px;height:26px;display:grid;place-items:center;border:1px solid #71848a;border-radius:50%;font:600 11px 'DM Sans',sans-serif;flex:none}
+    .nav-item.done .nav-number{background:var(--lime);border-color:var(--lime);color:#293944}
+    .nav-text{font-size:13px;line-height:1.35}
+    .side-bottom{margin-top:auto;border-top:1px solid rgba(255,255,255,.15);padding:17px 12px 0;color:#b8c5c3;font-size:11px}
+    main{min-width:0;padding:24px clamp(22px,5vw,76px) 72px}
+    .topbar{display:flex;justify-content:flex-end;align-items:center;gap:18px;margin-bottom:38px}
+    .privacy{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px}
+    .privacy-dot{width:8px;height:8px;background:#6caa7a;border-radius:50%}
+    .export{border:1px solid var(--line);background:white;color:var(--ink);border-radius:5px;padding:8px 12px;font-size:12px;font-weight:600}
+    .export:hover{border-color:var(--blue);color:var(--blue-dark)}
+    .page{max-width:1040px;margin:0 auto;animation:arrive .4s ease both}
+    @keyframes arrive{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+    .welcome{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin-bottom:27px}
+    .eyebrow{font:700 11px 'DM Sans',sans-serif;letter-spacing:.12em;color:var(--blue-dark);text-transform:uppercase;margin:0 0 8px}
+    h1{font-size:clamp(25px,3vw,36px);line-height:1.35;letter-spacing:0;margin:0;font-weight:700}
+    .welcome p{margin:10px 0 0;color:var(--muted);font-size:13px}
+    .completion{text-align:right;flex:none;min-width:112px}
+    .completion strong{font:700 29px 'DM Sans',sans-serif}
+    .completion span{font-size:12px;color:var(--muted);margin-left:3px}
+    .progress{height:5px;background:#dfe6e2;border-radius:9px;overflow:hidden;margin-top:8px}
+    .progress span{height:100%;display:block;background:var(--blue);transition:width .3s}
+    .intro{background:#e5f2f1;border-left:4px solid var(--blue);padding:17px 20px;margin:0 0 28px;color:#43565c;font-size:13px;line-height:1.9}
+    .section-heading{display:flex;justify-content:space-between;align-items:baseline;margin:30px 0 14px}
+    .section-heading h2{font-size:17px;margin:0}
+    .section-heading span{font:600 10px 'DM Sans',sans-serif;color:#8a9899;letter-spacing:.1em}
+    .course-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .course-card{background:var(--paper);border:1px solid var(--line);border-radius:5px;display:grid;grid-template-columns:56px 1fr 24px;align-items:center;gap:14px;padding:16px 18px;text-align:left;color:inherit;transition:transform .18s,border .18s,box-shadow .18s}
+    .course-card:hover{transform:translateY(-2px);border-color:#9ecbd0;box-shadow:var(--shadow)}
+    .card-num{font:700 20px 'DM Sans',sans-serif;color:var(--blue-dark);border-right:1px solid var(--line);line-height:1.1;padding:7px 8px 7px 0}
+    .card-copy strong{font-size:14px;display:block}
+    .card-copy small{color:var(--muted);font-size:11px}
+    .card-state{font-size:18px;color:#a6b1ae;text-align:center}
+    .course-card.done .card-state{color:#68937a}
+    .quote{margin:32px 0 0;padding:20px 24px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:#5d6d71;font-size:13px;line-height:2}
+    .quote strong{color:var(--ink);font-weight:600}
+    .back{border:0;background:transparent;color:var(--blue-dark);padding:0;font-size:12px;font-weight:600;margin:0 0 18px}
+    .lesson-header{display:flex;align-items:flex-start;gap:18px;margin-bottom:20px}
+    .lesson-index{font:700 13px 'DM Sans',sans-serif;color:var(--blue-dark);background:#dff0ef;border-radius:4px;padding:7px 10px;white-space:nowrap}
+    .lesson-header h1{font-size:28px}
+    .lesson-header p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .form-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+    .field label,.field-label{font-size:12px;font-weight:600;display:block;margin-bottom:7px}
+    input[type=text],input[type=number],input[type=date],input[type=email],input[type=password],textarea,select{width:100%;border:1px solid #d5dedb;border-radius:4px;background:#fff;color:var(--ink);padding:10px 12px;outline:none}
+    input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(54,169,197,.12)}
+    textarea{min-height:118px;resize:vertical;line-height:1.75}
+    .worksheet{display:grid;gap:14px}
+    .work-block{border-top:1px solid var(--line);padding-top:16px}
+    .work-block h2{font-size:15px;margin:0 0 12px}
+    .work-block h3{font-size:13px;margin:12px 0 7px}
+    .subtle{font-size:11px;color:var(--muted);margin:0 0 8px}
+    .life-sentence{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:15px}
+    .life-sentence input{width:180px;max-width:100%}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .triple-col{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .need-list{display:grid;gap:7px}
+    .need-row{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:center;background:white;border:1px solid var(--line);padding:9px 12px;border-radius:4px;font-size:13px}
+    .need-row input{padding:7px;max-width:90px}
+    .rank-list{display:grid;gap:7px}
+    .rank-row{display:grid;grid-template-columns:38px minmax(0,1fr);align-items:center;gap:9px}
+    .rank-row b{font:700 13px 'DM Sans',sans-serif;color:var(--blue-dark)}
+    .money-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .money-grid .field{background:white;border:1px solid var(--line);border-radius:4px;padding:12px}
+    .money-grid input{margin-top:5px}
+    .time-total{font-size:12px;color:var(--muted);margin:12px 0 6px}
+    .time-total strong{color:var(--ink)}
+    .time-total.error strong{color:#bb4b37}
+    .time-bar{height:8px;border-radius:2px;background:#e4e9e6;overflow:hidden;margin:8px 0 14px}
+    .time-bar span{height:100%;display:block;background:var(--blue);transition:width .25s}
+    .day-schedule{display:grid;gap:8px}
+    .schedule-row{display:grid;grid-template-columns:100px 14px 100px minmax(0,1fr);gap:8px;align-items:center}
+    .schedule-row span{text-align:center;color:var(--muted)}
+    .schedule-row input{min-width:0;padding:8px 10px}
+    .add-schedule{margin-top:10px;border:1px solid var(--line);border-radius:4px;background:white;color:var(--blue-dark);padding:8px 12px;font-size:12px;font-weight:600}
+    .add-schedule:hover{border-color:var(--blue)}
+    .plan-table{width:100%;border-collapse:collapse}
+    .plan-table th,.plan-table td{border-bottom:1px solid var(--line);padding:8px 5px;text-align:left;font-size:12px}
+    .plan-table th{color:var(--muted);font-weight:600}
+    .plan-table input{min-width:90px;padding:8px}
+    .form-actions{display:flex;align-items:center;gap:14px;margin-top:22px;border-top:1px solid var(--line);padding-top:18px}
+    .save-btn{border:0;background:var(--ink);color:white;border-radius:4px;padding:11px 20px;font-size:13px;font-weight:600}
+    .save-btn:hover{background:#3d5661}
+    .save-status{font-size:11px;color:#648a70}
+    .notice{font-size:11px;color:var(--muted);margin-top:16px}
+    .mobile-brand{display:none}
+    @media(max-width:780px){.shell{grid-template-columns:minmax(0,1fr)}aside{min-width:0;min-height:0;height:auto;position:relative;padding:13px 15px;gap:12px}.brand{border:0;padding:0 4px 3px}.brand-mark{font-size:29px}.nav-label,.side-bottom{display:none}.lesson-nav{min-width:0;display:flex;overflow:auto;gap:5px;padding-bottom:2px}.nav-item{padding:7px 9px;flex:none;gap:7px}.nav-number{width:24px;height:24px}.nav-text{font-size:11px;white-space:nowrap}main{padding:18px 17px 48px}.topbar{margin-bottom:25px}.welcome{align-items:flex-start}.course-grid{grid-template-columns:1fr}.course-card{padding:14px}.quote{padding:16px}.money-grid{grid-template-columns:repeat(2,1fr)}.lesson-header h1{font-size:24px}.triple-col{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}.form-meta{grid-template-columns:1fr 1fr}}
+    @media(max-width:430px){.privacy{display:none}.topbar{margin-bottom:21px}.welcome{display:block}.completion{text-align:left;margin-top:17px;max-width:170px}.intro{font-size:12px;padding:14px}.form-meta{grid-template-columns:1fr}.need-row{font-size:12px}.lesson-header{gap:10px}.lesson-header h1{font-size:22px}}
+  </style>
+</head>
+<body>
+  <section class="auth-screen" id="authView" hidden>
+    <div class="auth-panel">
+      <div class="auth-brand">vifa</div>
+      <h1>会員ログイン</h1>
+      <p>ご案内されたメールアドレスとパスワードでログインしてください。</p>
+      <form class="auth-form" id="loginForm">
+        <label>メールアドレス<input type="email" name="email" autocomplete="username" required></label>
+        <label>パスワード<input type="password" name="password" autocomplete="current-password" required></label>
+        <button class="save-btn" type="submit">ログイン</button>
+      </form>
+      <div class="auth-actions" id="migrationChoice" hidden>
+        <p>この端末に未同期のワーク記録があります。この会員アカウントに移行しますか？</p>
+        <button id="importLocalButton" type="button">この端末の記録を移行</button>
+        <button id="startEmptyButton" type="button">移行せずに開始</button>
+      </div>
+      <p class="auth-status" id="authStatus" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+  <div class="shell" id="portalView" hidden>
+    <aside>
+      <div class="brand"><div class="brand-mark">vifa</div><div class="brand-copy">vita facilitation<br>MEMBER PROGRAM</div></div>
+      <div class="nav-label">YOUR PROGRAM</div>
+      <nav class="lesson-nav" id="lessonNav" aria-label="カリキュラム"></nav>
+      <div class="side-bottom">自分のペースで、一歩ずつ。</div>
+    </aside>
+    <main>
+      <div class="topbar">
+        <div class="privacy" id="memberStatus"><span class="privacy-dot"></span>この端末に保存</div>
+        <span class="privacy" id="memberEmail"></span>
+        <button class="export" id="signOutButton" type="button" hidden>ログアウト</button>
+        <button class="export" id="exportButton" type="button">記録をエクスポート</button>
+      </div>
+      <div class="intro" id="localWarning" hidden>現在はこの端末だけに保存されるローカルモードです。会員ログインとクラウド保存を有効にするには、Supabaseの設定が必要です。</div>
+      <div class="page" id="app"></div>
+    </main>
+  </div>
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const lessons = [
+      {id:'self', title:'自己分析', subtitle:'今の自分を見つめ、これからの軸を知る'},
+      {id:'mental', title:'メンタルマネジメント', subtitle:'自分の感情と大切にしたいニーズを知る'},
+      {id:'money-time', title:'マネー&タイムマネジメント', subtitle:'お金と時間の使い方を見える化する'},
+      {id:'life', title:'人生を考える', subtitle:'叶えたい未来から人生の計画を描く'},
+      {id:'work', title:'働き方を考える', subtitle:'大切にしたい感情から働き方を考える'},
+      {id:'goals', title:'目標の立て方', subtitle:'いつまでにどうなりたいかを具体化する'}
+    ];
+    const storageKey = 'vifa-member-workbook-v1';
+    let records = loadRecords();
+    let current = 'home';
+    let draftSaveTimer;
+    let supabaseClient=null;
+    let currentUser=null;
+    let pendingLocalRecords=null;
+    let cloudSaveQueue=Promise.resolve();
+    const app = document.getElementById('app');
+    const lessonNav = document.getElementById('lessonNav');
+    const authView=document.getElementById('authView');
+    const portalView=document.getElementById('portalView');
+    const needs = [
+      '義理や家族が大切で人から好かれたい',
+      '自分らしく正しいこと、評価されること',
+      '実績や保証があり、危険が少ない',
+      '情熱を感じること、ワクワクすること',
+      '学ぶこと、新しい世界を楽しむこと',
+      '他を満たすことで自分が満たされる'
+    ];
+    function loadRecords(){try{return JSON.parse(localStorage.getItem(storageKey)||'{}')}catch{return {}}}
+    function persist(){
+      localStorage.setItem(storageKey,JSON.stringify(records));updateNavigation();
+      if(!supabaseClient||!currentUser)return;
+      const userId=currentUser.id;const snapshot=JSON.parse(JSON.stringify(records));
+      document.getElementById('memberStatus').innerHTML='<span class="privacy-dot"></span>クラウドに保存中';
+      cloudSaveQueue=cloudSaveQueue.catch(()=>{}).then(async()=>{
+        const {error}=await supabaseClient.from('member_workbooks').upsert({user_id:userId,workbook:snapshot,updated_at:new Date().toISOString()});
+        if(currentUser?.id===userId)document.getElementById('memberStatus').innerHTML=error?'保存エラー: 端末内には保存済みです':'<span class="privacy-dot"></span>クラウドに保存済み';
+        if(error)console.error('Workbook sync failed',error);
+      });
+    }
+    function esc(value=''){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
+    function saved(id){return records[id]||{}}
+    function updateNavigation(){
+      lessonNav.innerHTML=lessons.map((lesson,index)=>`<button class="nav-item ${current===lesson.id?'active':''} ${records[lesson.id]?.completed?'done':''}" data-go="${lesson.id}" type="button"><span class="nav-number">${records[lesson.id]?.completed?'✓':String(index+1).padStart(2,'0')}</span><span class="nav-text">${lesson.title}</span></button>`).join('');
+      lessonNav.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>openLesson(button.dataset.go)));
+    }
+    function renderHome(){
+      current='home';updateNavigation();
+      const completed=lessons.filter(lesson=>records[lesson.id]?.completed).length;
+      app.innerHTML=`<section class="page">
+        <div class="welcome"><div><p class="eyebrow">VIFA MEMBER PROGRAM</p><h1>理想の“将来像”を明確にする</h1><p>あなたのペースで、ワークを進めていきましょう。</p></div><div class="completion"><strong>${completed}</strong><span>/ 6 回完了</span><div class="progress"><span style="width:${completed/6*100}%"></span></div></div></div>
+        <div class="intro">人生、将来、仕事、人間関係・・・ 先の見えない社会において尽きない不安。<br>「どうしたらその不安から解消され、一歩前に進めるのか？」 vifaは先が見えないトンネルから、あなたの向かいたい出口とその先にある理想の“将来像”を見つけるお手伝いをします。</div>
+        <div class="section-heading"><h2>プログラム</h2><span>全6回</span></div>
+        <div class="course-grid">${lessons.map((lesson,index)=>`<button class="course-card ${records[lesson.id]?.completed?'done':''}" data-open="${lesson.id}" type="button"><span class="card-num">${String(index+1).padStart(2,'0')}</span><span class="card-copy"><strong>${lesson.title}</strong><small>${lesson.subtitle}</small></span><span class="card-state">${records[lesson.id]?.completed?'✓':'›'}</span></button>`).join('')}</div>
+        <div class="quote"><strong>vifaプログラムは1対1のセッションを通して自分の将来像を明確にするサポートを行います。</strong></div>
+        <p class="notice">入力内容はこの端末のブラウザーに保存されます。別の端末やブラウザーとは共有されません。</p>
+      </section>`;
+      app.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>openLesson(button.dataset.open)));
+    }
+    function field(label,key,placeholder=''){return `<div class="field"><label for="${key}">${label}</label><textarea id="${key}" name="${key}" placeholder="${placeholder}">${esc(saved(current)[key]||'')}</textarea></div>`}
+    function textField(label,key,type='text',extra=''){return `<div class="field"><label for="${key}">${label}</label><input id="${key}" name="${key}" type="${type}" ${type==='number'?'min="0" step="0.1"':''} value="${esc(saved(current)[key]??'')}" ${extra}></div>`}
+    function metaFields(){return `<div class="form-meta">${textField('日付','date','date')}${textField('氏名','name')}</div>`}
+    function rankRows(prefix,limit=6){return `<div class="rank-list">${Array.from({length:limit},(_,i)=>`<div class="rank-row"><b>${i+1}位</b><input type="text" inputmode="numeric" name="${prefix}${i+1}" value="${esc(saved(current)[prefix+(i+1)]??'')}" aria-label="${i+1}位の感情"></div>`).join('')}</div>`}
+    function lifeSentence(data){return `<div class="life-sentence"><input type="text" name="lifePlanPart1" value="${esc(data.lifePlanPart1??data.lifePlan??'')}" aria-label="夢を叶えるための文の前半"><span>は夢を叶えるための</span><input type="text" name="lifePlanPart2" value="${esc(data.lifePlanPart2??'')}" aria-label="夢を叶えるための文の後半"></div>`}
+    function balanceSentence(data){return `<div class="life-sentence"><span>それらをバランスよく手に入れ、それを扱う</span><input type="text" name="balance" value="${esc(data.balance??'')}" aria-label="それを扱うために備えるもの"><span>を備えていることが大事。</span></div>`}
+    function scheduleRow(index,entry={}){return `<div class="schedule-row"><input type="time" name="scheduleStart${index}" value="${esc(entry.start||'')}" aria-label="予定${index}の開始時刻"><span>〜</span><input type="time" name="scheduleEnd${index}" value="${esc(entry.end||'')}" aria-label="予定${index}の終了時刻"><input class="schedule-content" type="text" name="scheduleContent${index}" value="${esc(entry.content||'')}" placeholder="予定・活動内容" aria-label="予定${index}の内容"></div>`}
+    function scheduleRows(data){
+      const savedCount=Object.keys(data).filter(key=>/^scheduleContent\d+$/.test(key)).length;
+      if(savedCount)return Array.from({length:Math.max(5,savedCount)},(_,index)=>scheduleRow(index+1,{start:data[`scheduleStart${index+1}`],end:data[`scheduleEnd${index+1}`],content:data[`scheduleContent${index+1}`]})).join('');
+      const previous=Object.keys(data).filter(key=>/^timeSlot\d{2}$/.test(key)).sort().filter(key=>String(data[key]||'').trim()).map(key=>{
+        const hour=Number(key.slice(-2));
+        return {start:`${String(hour).padStart(2,'0')}:00`,end:`${String((hour+1)%24).padStart(2,'0')}:00`,content:data[key]};
+      });
+      return Array.from({length:Math.max(5,previous.length)},(_,index)=>scheduleRow(index+1,previous[index])).join('');
+    }
+    function worksheet(id){
+      current=id;
+      const data=saved(id);let body='';
+      if(id==='self')body=`<section class="work-block"><h2>1. 今の仕事の認識は？</h2><div class="triple-col">${field('好きな部分','likes')}${field('不満な部分','dissatisfactions')}${field('不安な部分','concerns')}</div></section><section class="work-block">${field('2. なぜ今の仕事を選んだの？','whyJob')}</section><section class="work-block"><h2>3. 過去思い描いていた自分と、現在の自分、どんなギャップがある？</h2>${field('ギャップ','gap')}<div class="two-col">${field('そのギャップはなぜ生まれた？','gapReason')}${field('どう感じている？','gapFeeling')}</div></section><section class="work-block"><h2>4. 理想的な自分</h2><div class="two-col">${field('どんな状態なら満足か？（理想像・ライフスタイル・こだわり・好きなことやもの）','ideal')}${field('取り除きたい不安や不満は？（自分の嫌いなところ・自信が持てないところなど）','remove')}</div></section><section class="work-block">${field('5. 求める自分になる為に必要なことは？','nextSteps')}</section>`;
+      if(id==='mental')body=`<section class="work-block"><h2>シックスヒューマンニーズ</h2><p class="subtle">それぞれの項目に優先順位をつけてください。</p><div class="need-list">${needs.map((need,index)=>`<div class="need-row"><input type="text" inputmode="numeric" name="need${index+1}" value="${esc(data['need'+(index+1)]??'')}" aria-label="${need}の優先順位"><span>${need}</span></div>`).join('')}</div></section><section class="work-block"><h2>あなたが優先してる感情のランキング</h2>${rankRows('currentRank',4)}</section><section class="work-block"><h2>未来を帰る為の感情の優先順位</h2>${rankRows('futureRank',4)}</section>`;
+      if(id==='money-time')body=`<section class="work-block"><h2>マネーマネジメント</h2><p class="subtle">月あたりの金額を万円単位で入力してください。</p><div class="money-grid">${[['現在の月収','income'],['固定費用','fixed'],['変動費用','variable'],['投資費用','investment']].map(([label,key])=>`<div class="field"><label for="${key}">${label}（万円）</label><input id="${key}" name="${key}" type="number" min="0" step="0.1" value="${esc(data[key]??'')}"></div>`).join('')}</div><div class="two-col" style="margin-top:12px">${field('お金について気づいたこと','moneyNotes')}</div></section><section class="work-block"><h2>タイムマネジメント</h2><label class="field-label">自分の自由な時間を含めた、1日のタイムスケジュール</label><p class="subtle">時間帯を選んで予定を書き込みましょう。入力欄は必要に応じて追加できます。</p><div class="time-total" id="timeTotal">入力済み <strong>0</strong> / 5件</div><div class="time-bar" id="timeBar"><span style="width:0%"></span></div><div class="day-schedule" id="daySchedule">${scheduleRows(data)}</div><button class="add-schedule" id="addSchedule" type="button">＋ 予定を追加</button>${field('時間の使い方で気づいたこと','timeNotes')}</section>`;
+      if(id==='life')body=`<section class="work-block">${lifeSentence(data)}</section><section class="work-block"><h2>豊かな人生とは</h2><p class="subtle">豊かな人生に必要だと思うことを書き出してみましょう。</p><div class="two-col">${textField('1','rich1')}${textField('2','rich2')}${textField('3','rich3')}${textField('4','rich4')}</div>${balanceSentence(data)}</section>`;
+      if(id==='work')body=`<section class="work-block">${field('仕事でどんな感情を満たしたいか書き出そう','workFeelings')}</section><section class="work-block">${field('書き出した感情が満たせそうな仕事を書き出そう','workOptions')}</section><section class="work-block">${field('その仕事をするために必要なことを書き出そう','workNeeded')}</section><section class="work-block">${field('仕事に求める条件を書き出そう','workConditions')}</section>`;
+      if(id==='goals')body=`<section class="work-block">${field('いつまでに、どうなりたいか目標を立てよう','goal')}</section><section class="work-block">${field('目標を達成するために必要なことを書き出そう','goalNeeds')}</section><section class="work-block"><h2>目標を達成するための計画を立てよう</h2><table class="plan-table"><thead><tr><th>期限</th><th>やること</th><th>完了</th></tr></thead><tbody>${[1,2,3,4,5].map(i=>`<tr><td><input name="goalDate${i}" type="text" value="${esc(data['goalDate'+i]||'')}" placeholder="例：今月中"></td><td><input name="goalAction${i}" type="text" value="${esc(data['goalAction'+i]||'')}" placeholder=""></td><td><input name="goalCheck${i}" type="text" value="${esc(data['goalCheck'+i]||'')}" placeholder=""></td></tr>`).join('')}</tbody></table></section>`;
+      app.innerHTML=`<section class="page"><button class="back" id="backButton" type="button">← プログラム一覧</button><div class="lesson-header"><span class="lesson-index">${String(lessons.findIndex(item=>item.id===id)+1).padStart(2,'0')}</span><div><h1>${lessons.find(item=>item.id===id).title}</h1><p>${lessons.find(item=>item.id===id).subtitle}</p></div></div><form id="worksheetForm">${metaFields()}<div class="worksheet">${body}</div><div class="form-actions"><button class="save-btn" type="submit">記録を保存</button><span class="save-status" id="saveStatus">${data.updated?'保存済み':''}</span></div><p class="notice">入力内容はこの端末のブラウザーに保存されます。端末を変更する前に「記録をエクスポート」からバックアップしてください。</p></form></section>`;
+      document.getElementById('backButton').addEventListener('click',renderHome);
+      const form=document.getElementById('worksheetForm');
+      const addSchedule=document.getElementById('addSchedule');
+      if(addSchedule)addSchedule.addEventListener('click',()=>{const schedule=document.getElementById('daySchedule');schedule.insertAdjacentHTML('beforeend',scheduleRow(schedule.children.length+1));updateTimeSummary();schedule.lastElementChild.querySelector('input').focus()});
+      const scheduleDraftSave=()=>{updateTimeSummary();document.getElementById('saveStatus').textContent='未保存の変更があります';window.clearTimeout(draftSaveTimer);draftSaveTimer=window.setTimeout(()=>saveForm(form,id,false),600)};
+      form.addEventListener('input',scheduleDraftSave);
+      form.addEventListener('change',scheduleDraftSave);
+      form.addEventListener('submit',event=>{event.preventDefault();window.clearTimeout(draftSaveTimer);saveForm(form,id,true)});
+      updateTimeSummary();updateNavigation();
+    }
+    function updateTimeSummary(){
+      const inputs=[...document.querySelectorAll('.schedule-content')];if(!inputs.length)return;
+      const filled=inputs.filter(input=>input.value.trim()).length;
+      document.getElementById('timeTotal').innerHTML=`入力済み <strong>${filled}</strong> / ${inputs.length}件`;
+      document.querySelector('#timeBar span').style.width=`${filled/inputs.length*100}%`;
+    }
+    function saveForm(form,id,completed){
+      const next={};new FormData(form).forEach((value,key)=>next[key]=value);
+      next.completed=completed||Boolean(records[id]?.completed);next.updated=new Date().toISOString();records[id]=next;persist();
+      const status=document.getElementById('saveStatus');if(status)status.textContent=completed?'保存しました':'下書きを自動保存しました';
+      if(current==='home')renderHome();
+    }
+    function openLesson(id){current=id;worksheet(id)}
+    function showAuth(message=''){
+      authView.hidden=false;portalView.hidden=true;
+      document.getElementById('loginForm').hidden=false;document.getElementById('migrationChoice').hidden=true;
+      document.getElementById('authStatus').textContent=message;
+    }
+    function showPortal(cloudEnabled){
+      authView.hidden=true;portalView.hidden=false;
+      document.getElementById('localWarning').hidden=cloudEnabled;
+      document.getElementById('memberEmail').textContent=currentUser?.email||'';
+      document.getElementById('signOutButton').hidden=!currentUser;
+      document.getElementById('memberStatus').innerHTML=`<span class="privacy-dot"></span>${cloudEnabled?'クラウド保存':'この端末に保存'}`;
+      renderHome();
+    }
+    async function enterMemberArea(user){
+      if(currentUser?.id===user.id&&!portalView.hidden)return;
+      currentUser=user;
+      const {data,error}=await supabaseClient.from('member_workbooks').select('workbook').eq('user_id',user.id).maybeSingle();
+      if(error){currentUser=null;showAuth('記録を読み込めませんでした。管理者に設定をご確認ください。');console.error('Workbook load failed',error);return}
+      if(data?.workbook){records=data.workbook;localStorage.setItem(storageKey,JSON.stringify(records));showPortal(true);return}
+      pendingLocalRecords=loadRecords();
+      if(Object.keys(pendingLocalRecords).length){
+        document.getElementById('loginForm').hidden=true;document.getElementById('migrationChoice').hidden=false;
+        document.getElementById('authStatus').textContent='初回ログインです。既存の端末内記録を移行するか選んでください。';return;
+      }
+      records={};localStorage.setItem(storageKey,'{}');showPortal(true);
+    }
+    async function finishLocalMigration(importRecords){
+      records=importRecords&&pendingLocalRecords?pendingLocalRecords:{};pendingLocalRecords=null;
+      localStorage.setItem(storageKey,JSON.stringify(records));showPortal(true);persist();
+    }
+    async function initialize(){
+      const settings=window.VIFA_SUPABASE||{};
+      const configured=Boolean(settings.url&&settings.anonKey&&!settings.url.includes('YOUR-'));
+      if(!configured){showPortal(false);return}
+      if(!window.supabase?.createClient){showAuth('認証サービスを読み込めません。ネットワーク接続を確認してください。');return}
+      supabaseClient=window.supabase.createClient(settings.url,settings.anonKey);
+      supabaseClient.auth.onAuthStateChange((event,session)=>{
+        if(event==='SIGNED_OUT'){currentUser=null;records={};localStorage.removeItem(storageKey);showAuth('ログアウトしました。')}
+        else if(event==='SIGNED_IN'&&session?.user)enterMemberArea(session.user);
+      });
+      const {data,error}=await supabaseClient.auth.getSession();
+      if(error){showAuth('ログイン状態を確認できませんでした。もう一度お試しください。');return}
+      if(data.session?.user)await enterMemberArea(data.session.user);else showAuth();
+    }
+    document.getElementById('loginForm').addEventListener('submit',async event=>{
+      event.preventDefault();if(!supabaseClient)return;
+      const form=new FormData(event.currentTarget);const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+      document.getElementById('authStatus').textContent='ログインしています…';
+      const {error}=await supabaseClient.auth.signInWithPassword({email:form.get('email'),password:form.get('password')});
+      button.disabled=false;
+      if(error)document.getElementById('authStatus').textContent='ログインできませんでした。メールアドレスとパスワードをご確認ください。';
+    });
+    document.getElementById('importLocalButton').addEventListener('click',()=>finishLocalMigration(true));
+    document.getElementById('startEmptyButton').addEventListener('click',()=>finishLocalMigration(false));
+    document.getElementById('signOutButton').addEventListener('click',async()=>{await cloudSaveQueue;await supabaseClient.auth.signOut()});
+    document.getElementById('exportButton').addEventListener('click',()=>{
+      const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),lessons:records},null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='vifa-workbook.json';link.click();URL.revokeObjectURL(url);
+    });
+    initialize();
+  </script>
+</body>
+</html>
