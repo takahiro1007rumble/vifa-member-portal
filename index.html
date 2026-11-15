@@ -132,6 +132,7 @@
         <label>パスワード<input type="password" name="password" autocomplete="current-password" required></label>
         <button class="save-btn" type="submit">ログイン</button>
       </form>
+      <div class="auth-actions"><button id="authCancelButton" type="button" hidden>閲覧画面に戻る</button></div>
       <div class="auth-actions" id="migrationChoice" hidden>
         <p>この端末に未同期のワーク記録があります。この会員アカウントに移行しますか？</p>
         <button id="importLocalButton" type="button">この端末の記録を移行</button>
@@ -151,6 +152,7 @@
       <div class="topbar">
         <div class="privacy" id="memberStatus"><span class="privacy-dot"></span>この端末に保存</div>
         <span class="privacy" id="memberEmail"></span>
+        <button class="export" id="signInButton" type="button" hidden>ログイン</button>
         <button class="export" id="signOutButton" type="button" hidden>ログアウト</button>
         <button class="export" id="exportButton" type="button">記録をエクスポート</button>
       </div>
@@ -216,7 +218,7 @@
         <div class="section-heading"><h2>プログラム</h2><span>全6回</span></div>
         <div class="course-grid">${lessons.map((lesson,index)=>`<button class="course-card ${records[lesson.id]?.completed?'done':''}" data-open="${lesson.id}" type="button"><span class="card-num">${String(index+1).padStart(2,'0')}</span><span class="card-copy"><strong>${lesson.title}</strong><small>${lesson.subtitle}</small></span><span class="card-state">${records[lesson.id]?.completed?'✓':'›'}</span></button>`).join('')}</div>
         <div class="quote"><strong>vifaプログラムは1対1のセッションを通して自分の将来像を明確にするサポートを行います。</strong></div>
-        <p class="notice">入力内容はこの端末のブラウザーに保存されます。別の端末やブラウザーとは共有されません。</p>
+        <p class="notice">${window.VIFA_SUPABASE?.url&&!currentUser?'閲覧モードです。ログインするとワークを記入・保存できます。':'入力内容はこの端末のブラウザーに保存されます。別の端末やブラウザーとは共有されません。'}</p>
       </section>`;
       app.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>openLesson(button.dataset.open)));
     }
@@ -250,6 +252,17 @@
       const form=document.getElementById('worksheetForm');
       const addSchedule=document.getElementById('addSchedule');
       if(addSchedule)addSchedule.addEventListener('click',()=>{const schedule=document.getElementById('daySchedule');schedule.insertAdjacentHTML('beforeend',scheduleRow(schedule.children.length+1));updateTimeSummary();schedule.lastElementChild.querySelector('input').focus()});
+      const settings=window.VIFA_SUPABASE||{};
+      const guestMode=Boolean(settings.url&&settings.anonKey&&!currentUser);
+      if(guestMode){
+        form.querySelectorAll('input,textarea').forEach(control=>control.readOnly=true);
+        form.querySelectorAll('select').forEach(control=>control.disabled=true);
+        if(addSchedule)addSchedule.disabled=true;
+        const actions=form.querySelector('.form-actions');
+        actions.innerHTML='<span class="save-status">閲覧モード</span><button class="save-btn" id="guestLoginButton" type="button">ログインしてワークを保存</button>';
+        form.querySelector('.notice').textContent='ログインするとワークを記入・保存できます。';
+        document.getElementById('guestLoginButton').addEventListener('click',()=>showAuth('',true));
+      }
       const scheduleDraftSave=()=>{updateTimeSummary();document.getElementById('saveStatus').textContent='未保存の変更があります';window.clearTimeout(draftSaveTimer);draftSaveTimer=window.setTimeout(()=>saveForm(form,id,false),600)};
       form.addEventListener('input',scheduleDraftSave);
       form.addEventListener('change',scheduleDraftSave);
@@ -269,24 +282,29 @@
       if(current==='home')renderHome();
     }
     function openLesson(id){current=id;worksheet(id)}
-    function showAuth(message=''){
+    function showAuth(message='',canReturn=false){
       authView.hidden=false;portalView.hidden=true;
       document.getElementById('loginForm').hidden=false;document.getElementById('migrationChoice').hidden=true;
+      document.getElementById('authCancelButton').hidden=!canReturn;
       document.getElementById('authStatus').textContent=message;
     }
     function showPortal(cloudEnabled){
       authView.hidden=true;portalView.hidden=false;
+      const guestMode=cloudEnabled&&!currentUser;
       document.getElementById('localWarning').hidden=cloudEnabled;
       document.getElementById('memberEmail').textContent=currentUser?.email||'';
+      document.getElementById('signInButton').hidden=!guestMode;
+      document.getElementById('signInButton').disabled=guestMode&&!supabaseClient;
       document.getElementById('signOutButton').hidden=!currentUser;
-      document.getElementById('memberStatus').innerHTML=`<span class="privacy-dot"></span>${cloudEnabled?'クラウド保存':'この端末に保存'}`;
+      document.getElementById('exportButton').hidden=guestMode;
+      document.getElementById('memberStatus').innerHTML=`<span class="privacy-dot"></span>${guestMode?'閲覧モード':cloudEnabled?'クラウド保存':'この端末に保存'}`;
       renderHome();
     }
     async function enterMemberArea(user){
       if(currentUser?.id===user.id&&!portalView.hidden)return;
       currentUser=user;
       const {data,error}=await supabaseClient.from('member_workbooks').select('workbook').eq('user_id',user.id).maybeSingle();
-      if(error){currentUser=null;showAuth('記録を読み込めませんでした。管理者に設定をご確認ください。');console.error('Workbook load failed',error);return}
+      if(error){currentUser=null;records={};showPortal(true);document.getElementById('memberStatus').textContent='記録を読み込めません';console.error('Workbook load failed',error);return}
       if(data?.workbook){records=data.workbook;localStorage.setItem(storageKey,JSON.stringify(records));showPortal(true);return}
       pendingLocalRecords=loadRecords();
       if(Object.keys(pendingLocalRecords).length){
@@ -303,24 +321,26 @@
       const settings=window.VIFA_SUPABASE||{};
       const configured=Boolean(settings.url&&settings.anonKey&&!settings.url.includes('YOUR-'));
       if(!configured){showPortal(false);return}
-      if(!window.supabase?.createClient){showAuth('認証サービスを読み込めません。ネットワーク接続を確認してください。');return}
+      if(!window.supabase?.createClient){records={};showPortal(true);document.getElementById('memberStatus').textContent='認証サービスに接続できません';return}
       supabaseClient=window.supabase.createClient(settings.url,settings.anonKey);
       supabaseClient.auth.onAuthStateChange((event,session)=>{
         if(event==='SIGNED_OUT'){currentUser=null;records={};localStorage.removeItem(storageKey);showAuth('ログアウトしました。')}
         else if(event==='SIGNED_IN'&&session?.user)enterMemberArea(session.user);
       });
       const {data,error}=await supabaseClient.auth.getSession();
-      if(error){showAuth('ログイン状態を確認できませんでした。もう一度お試しください。');return}
-      if(data.session?.user)await enterMemberArea(data.session.user);else showAuth();
+      if(error){records={};showPortal(true);document.getElementById('memberStatus').textContent='認証サービスに接続できません';return}
+      if(data.session?.user)await enterMemberArea(data.session.user);else{pendingLocalRecords=loadRecords();records={};showPortal(true)}
     }
     document.getElementById('loginForm').addEventListener('submit',async event=>{
-      event.preventDefault();if(!supabaseClient)return;
+      event.preventDefault();if(!supabaseClient){document.getElementById('authStatus').textContent='認証サービスに接続できません。';return}
       const form=new FormData(event.currentTarget);const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
       document.getElementById('authStatus').textContent='ログインしています…';
       const {error}=await supabaseClient.auth.signInWithPassword({email:form.get('email'),password:form.get('password')});
       button.disabled=false;
       if(error)document.getElementById('authStatus').textContent='ログインできませんでした。メールアドレスとパスワードをご確認ください。';
     });
+    document.getElementById('signInButton').addEventListener('click',()=>showAuth('',true));
+    document.getElementById('authCancelButton').addEventListener('click',()=>showPortal(true));
     document.getElementById('importLocalButton').addEventListener('click',()=>finishLocalMigration(true));
     document.getElementById('startEmptyButton').addEventListener('click',()=>finishLocalMigration(false));
     document.getElementById('signOutButton').addEventListener('click',async()=>{await cloudSaveQueue;await supabaseClient.auth.signOut()});
