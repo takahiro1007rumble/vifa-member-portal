@@ -32,6 +32,7 @@ jobs:
         run: |
           mkdir public
           cp index.html config.js public/
+          printf '%s\n' 'member.vita-facilitation.com' > public/CNAME
           touch public/.nojekyll
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
